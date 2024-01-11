@@ -5,7 +5,7 @@ function onGeoSucess(position) {
   const latitude = position.coords.latitude;
   const longitude = position.coords.longitude;
   console.log(`You are located in ${latitude}, ${longitude}`);
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`;
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${WEATHER_API}&units=metric`;
   fetch(url)
     .then((response) => response.json())
     .then((data) => {
