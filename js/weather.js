@@ -1,30 +1,67 @@
-const WEATHER_API = config.API_KEY;
-
-/* 유저의 위치 정보를 받아옴. */
-function onGeoSucess(position) {
-  const latitude = position.coords.latitude;
-  const longitude = position.coords.longitude;
-  console.log(`You are located in ${latitude}, ${longitude}`);
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${WEATHER_API}&units=metric`;
-  fetch(url)
-    .then((response) => response.json())
-    .then((data) => {
-      const weather = document.querySelector('#weather span:first-child');
-      weather.innerText = `weather:${data.weather[0].main} / temperature:${data.main.temp}\n`;
-      const city = document.querySelector('#weather span:last-child');
-      city.innerText = data.name;
-    });
+/* API Key 저장 함수 */
+function saveWeatherAPIKey(apiKey) {
+  localStorage.setItem('WEATHER_API_KEY', apiKey);
 }
 
-/* geolocation error toast message 출력 */
-function onGeoError() {
-  const error_toast_msg = document.querySelector('#toast_msg');
-  error_toast_msg.innerText = "Can't find current location!";
+/* API Key 불러오는 함수 */
+function getWeatherAPIKey() {
+  return localStorage.getItem('WEATHER_API_KEY');
+}
 
-  toast_msg.classList.add('active');
+/* 에러 토스트 메시지 출력 함수 */
+function showErrorToast(message) {
+  const errorToastMsg = document.getElementById('toast_msg');
+  errorToastMsg.innerText = message;
+
+  errorToastMsg.classList.add('active');
   setTimeout(function () {
-    toast_msg.classList.remove('active');
+    errorToastMsg.classList.remove('active');
   }, 1500);
 }
 
-navigator.geolocation.getCurrentPosition(onGeoSucess, onGeoError);
+/* API KEY 제출 함수 */
+function onAPIKeySubmit(event) {
+  event.preventDefault();
+
+  const apiKeyInput = document.getElementById('apiKey');
+  const apiKey = apiKeyInput.value.trim();
+
+  if (apiKey !== '') {
+    saveWeatherAPIKey(apiKey);
+    apiKeyInput.value = '';
+  } else {
+    showErrorToast('Please enter a valid API Key.');
+  }
+}
+
+document.getElementById('apiKeyForm').addEventListener('submit', onAPIKeySubmit);
+
+/* geolocation success의 경우의 함수: 유저의 위치 정보를 받아온다. */
+function onGeoSuccess(position) {
+  const latitude = position.coords.latitude;
+  const longitude = position.coords.longitude;
+
+  const apiKey = getWeatherAPIKey();
+
+  if (apiKey) {
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        const weather = document.querySelector('#weather span:first-child');
+        weather.innerText = `Weather: ${data.weather[0].main} / Temperature: ${data.main.temp}\n`;
+        const city = document.querySelector('#weather span:last-child');
+        city.innerText = `City: ${data.name}`;
+      });
+  } else {
+    showErrorToast('API Key is not set. Please save your API Key.');
+  }
+}
+
+/* geolocation error인 경우의 함수 */
+function onGeoError() {
+  showErrorToast("Can't find current location!");
+}
+
+navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError);
